@@ -28,6 +28,7 @@ local logger = require("logger")
 local util = require("util")
 local _ = require("gettext")
 local Screen = Device.screen
+local http = require("socket.http")
 
 -- Default settings
 if G_reader_settings:hasNot("screensaver_show_message") then
@@ -135,6 +136,7 @@ function Screensaver:expandSpecial(message, fallback)
     local time_left_document = _("N/A")
     local batt_lvl = _("N/A")
     local batt_symbol = _("N/A")
+    local current_weather = _("N/A")
     local props
 
     local ReaderUI = require("apps/reader/readerui")
@@ -201,6 +203,11 @@ function Screensaver:expandSpecial(message, fallback)
         end
     end
 
+    local response, status = http.request("http://wttr.in/?format=3")
+    if status == 200 then
+        current_weather = response or _("N/A")
+    end
+
     local replace = {
         ["%T"] = title,
         ["%A"] = authors,
@@ -212,6 +219,7 @@ function Screensaver:expandSpecial(message, fallback)
         ["%H"] = time_left_document,
         ["%b"] = batt_lvl,
         ["%B"] = batt_symbol,
+        ["%w"] = current_weather,
     }
     ret = ret:gsub("(%%%a)", replace)
 
